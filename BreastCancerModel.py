@@ -1,12 +1,15 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, recall_score
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-import time
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
+
 
 
 #PREPROCESSING ---------------------------------------------------
@@ -51,31 +54,37 @@ X_test_pca = pca.transform(X_test)
 #TRAIN & EVALUATE MODEL -----------------------------------------------------------
 
 # Train logistic regression model
-start = time.time()
 model = LogisticRegression()
 model.fit(X_train_pca, y_train)
-end = time.time()
-
-# Training time
-pca_train_time = end - start
 
 # Predict
 predictions = model.predict(X_test_pca)
 
-# Evaluate
-accuracy = accuracy_score(y_test, predictions)
+# Generate classification report
+report = classification_report(y_test, predictions)
+print(report)
 
-# Plot Predictions
-plt.scatter(X_test_pca[predictions==0][:, 0], X_test_pca[predictions==0][:, 1], color='blue', label='Benign')
-plt.scatter(X_test_pca[predictions==1][:, 0], X_test_pca[predictions==1][:, 1], color='red', label='M')
+
+# Plot real values vs predicted values
+plt.figure()
+plt.scatter(X_test_pca[y_test == 0, 0], X_test_pca[y_test == 0, 1], color='red', alpha=0.5, label='Benign')
+plt.scatter(X_test_pca[y_test == 1, 0], X_test_pca[y_test == 1, 1], color='blue', alpha=0.5, label='Malignant')
+plt.scatter(X_test_pca[predictions != y_test, 0], X_test_pca[predictions != y_test, 1], color='yellow', label='Misclassified', edgecolors='black')
 plt.xlabel('Principal Component 1')
 plt.ylabel('Principal Component 2')
-plt.title('Test Data with Predictions')
-plt.figtext(0.9, 0.01, f"Training Time: {pca_train_time:.3f} seconds. \n"
-    f"Testing Accuracy: {accuracy * 100:.2f}%.", ha="right", fontsize=10, bbox={"facecolor":"orange", "alpha":0.5, "pad":5})
 plt.legend()
+plt.title('PCA of Breast Cancer Test Set')
 plt.show()
 
+# Generate confusion matrix
+cm = confusion_matrix(y_test, predictions)
+
+# Display the confusion matrix
+plt.figure(figsize=(10,7))
+sns.heatmap(cm, annot=True, fmt='d')
+plt.xlabel('Predicted')
+plt.ylabel('True ')
+plt.show()
 
 
 
